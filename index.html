@@ -1,0 +1,140 @@
+<!-- File: safe-demo.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+  <title>Document Review (Safe Demo)</title>
+  <style>
+    body { margin: 0; padding: 0; height: 100vh; min-height: 100vh; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4fb; }
+    #loading-screen { position: fixed; inset: 0; background: #fff; display: grid; place-items: center; z-index: 1000; }
+    #loading-screen .loading-dots { display: flex; gap: 8px; }
+    #loading-screen .dot { width: 12px; height: 12px; background: #4f33a6; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
+    #loading-screen .dot:nth-child(2) { animation-delay: 0.2s; }
+    #loading-screen .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.5);opacity:.5;} }
+    #form-container { display: none; position: relative; height: 100vh; }
+    #content-wrapper { position: relative; z-index: 2; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; }
+    #content-container { background: rgba(255,255,255,.98); border-radius: 12px; width: 100%; max-width: 520px; color: #4f33a6; box-shadow: 0 4px 20px rgba(0,0,0,.1); padding: 28px; margin-top: 16px; }
+    #continue-link { text-decoration: none; color: #aaa; font-size: 19px; display: inline-block; padding: 6px 12px; pointer-events: none; }
+    .right { text-align: right; margin-top: 16px; }
+  </style>
+
+  <script>
+    // WHY: Demonstrate attaching a listener "before the element exists" using event delegation.
+    // Place early in <head> (no defer) so it registers immediately during parse.
+    document.addEventListener('click', function onEarlyClick(e) {
+      const a = e.target.closest('#continue-link');
+      if (!a) return; // Ignore all other clicks
+      e.preventDefault();
+
+      // Harmless action: log + transition state.
+      console.log('[safe-demo] Continue clicked');
+      a.textContent = 'Continuing...';
+      a.style.pointerEvents = 'none';
+
+      // Simulate navigation without external data collection
+      setTimeout(() => {
+        window.location.href = 'safe-verify.html';
+      }, 600);
+    }, true); // capture phase ensures we see it early
+
+    // Minimal feature detection (non-essential, just to avoid errors in very old browsers)
+    (function(){ if (!document.addEventListener) { alert('Your browser is too old for this demo.'); } })();
+  </script>
+</head>
+<body>
+  <div id="loading-screen">
+    <div class="loading-dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <div id="form-container">
+    <div id="content-wrapper">
+      <div id="content-container">
+        <h2 style="font-weight:100;margin:1px 0 5px 0;">Messages</h2>
+        <p style="font-size:16px;margin:5px 0;">Demo Inbox</p>
+        <p style="font-size:14px;margin:5px 0;">Review your documents before they expire.</p>
+        <div class="right">
+          <a href="safe-verify.html" id="continue-link">Continue</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // WHY: Gate UI behind a loading state; enable the link once shown (harmless, local-only).
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const loading = document.getElementById('loading-screen');
+        const form = document.getElementById('form-container');
+        if (loading) loading.style.display = 'none';
+        if (form) form.style.display = 'block';
+
+        const link = document.getElementById('continue-link');
+        if (link) {
+          link.style.pointerEvents = '';
+          link.style.color = '#4f33a6';
+        }
+      }, 900);
+    });
+  </script>
+</body>
+</html>
+
+<!-- File: safe-verify.html (optional benign destination) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Safe Verify</title>
+  <style> body{font-family:system-ui,Segoe UI,Arial,sans-serif;padding:24px;line-height:1.6} .card{max-width:560px;margin:auto;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:24px} .btn{display:inline-block;background:#4f33a6;color:#fff;text-decoration:none;border-radius:10px;padding:10px 16px} </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Safe Verification Page</h1>
+    <p>This is a benign target page to demonstrate navigation after a click listener that was registered early in the document.</p>
+    <a class="btn" href="safe-demo.html">Back</a>
+  </div>
+</body>
+</html>
+
+<!-- File: benign-worker.js (Cloudflare Worker–style, harmless) -->
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request));
+});
+
+async function handleRequest(request) {
+  const url = new URL(request.url);
+
+  if (url.searchParams.get('step') === 'final') {
+    // WHY: show benign redirect target; replace with your own safe page during tests.
+    return Response.redirect('https://example.com/', 302);
+  }
+
+  const html = `
+    <!doctype html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta http-equiv="refresh" content="1.0;url=${url.origin}?step=final" />
+      <title>Loading (Benign)</title>
+      <style>
+        html,body{height:100%} body{margin:0;font-family:Arial, sans-serif;overflow:hidden}
+        iframe{position:fixed;inset:0;border:none;width:100%;height:100vh;z-index:0}
+        .notice{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.65);color:#fff;padding:20px 40px;border-radius:8px;font-size:20px;font-weight:700;z-index:1;animation:pulse 1s infinite}
+        @keyframes pulse{0%{transform:translate(-50%,-50%) scale(1);opacity:.9}50%{transform:translate(-50%,-50%) scale(1.06);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:.9}}
+      </style>
+    </head>
+    <body>
+      <iframe src="https://www.wikipedia.org"></iframe>
+      <div class="notice">Please wait…</div>
+    </body>
+    </html>`;
+
+  return new Response(html, { headers: { 'content-type': 'text/html; charset=UTF-8' } });
+}
